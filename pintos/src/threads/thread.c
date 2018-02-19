@@ -521,8 +521,9 @@ thread_schedule_tail (struct thread *prev)
 
   /* Mark us as running. */
   cur->status = THREAD_RUNNING;
-
-  /* Start new time slice. */
+  if(strcmp(cur->name,"idle")!=0){
+  printf("%s%s\n", "Now running: ", cur->name);
+  }/* Start new time slice. */
   thread_ticks = 0;
 
 #ifdef USERPROG
