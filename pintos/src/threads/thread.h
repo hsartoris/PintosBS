@@ -98,6 +98,9 @@ struct thread
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
+    /* HI FROM RACHEL this is for the list of sleeping threads */
+    struct list_elem sleepelem;
+
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
@@ -107,9 +110,8 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
 
     struct semaphore thread_timer_semaphore; //semaphore associated with the thread
-    int time_asleep; //amount of time that the thread stays asleep for
-  };
-
+    int time_asleep; //time that the thread should wake up
+};
   // One element in the list
 struct mystruct {
   char *word;
@@ -151,5 +153,9 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+/*hi from rachel this is so we can add threads
+to the sleeping list in timer.c*/
+void sleeping_threads_push(struct thread *t);
 
 #endif /* threads/thread.h */

@@ -28,6 +28,13 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
+/* RACHEL ADDED THIS
+LIST OF ALL SLEEPING THREADS
+ADDED WHEN THEY GO TO SLEEP, REMOVED WHEN THEY WAKE
+*/
+
+static struct list sleeping_list;
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
@@ -93,6 +100,9 @@ thread_init (void)
   list_init (&ready_list);
   list_init (&all_list);
 
+  //IT'S RACHEL AGAIN initialize sleeping_list
+  list_init(&sleeping_list);
+
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
   init_thread (initial_thread, "main", PRI_DEFAULT);
@@ -115,7 +125,7 @@ thread_start (void)
 
   /* Wait for the idle thread to initialize idle_thread. */
   sema_down (&idle_started);
-  test_list();
+  
 }
 
 /* Called by the timer interrupt handler at each timer tick.
@@ -124,12 +134,21 @@ void
 thread_tick (void) 
 {
   struct thread *t = thread_current ();
-
-if(timer_ticks()>=t->time_asleep){
-    t->time_asleep = 0;
-    printf("%s%d\n", "wake up!", t->tid);
-    sema_up(&t->thread_timer_semaphore);
+  struct list_elem *e;
+  // Loop over list
+  for (e = list_begin(&sleeping_list);
+       e != list_end(&sleeping_list);
+       e = list_next(e) ){
+  	struct thread *temp = list_entry(e, struct thread, sleepelem);
+  		if(timer_ticks()>=temp->time_asleep){
+	    	temp->time_asleep = 0;
+	    	list_remove(&temp->sleepelem);
+	    	// printf("%s%d\n", "wake up!", t->tid);
+	    	sema_up(&temp->thread_timer_semaphore);
+	  }
   }
+
+
 
 
   /* Update statistics. */
@@ -602,6 +621,10 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+void sleeping_threads_push(struct thread *t){
+	list_push_back(&sleeping_list, &t->sleepelem);
+}
 
 /*
   Build a list and test that it works.

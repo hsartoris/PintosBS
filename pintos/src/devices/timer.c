@@ -95,13 +95,17 @@ timer_sleep (int64_t ticks)
   int64_t start = timer_ticks ();
 
   t->time_asleep = (ticks+start);//also us
-  printf("%d\n", t->time_asleep);
-  sema_down(&t->thread_timer_semaphore);
+  // printf("%d\n", t->time_asleep);
+  
 
   ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks) 
-    //this is the busy waiting
-    thread_yield ();
+
+  sleeping_threads_push(t);
+
+  sema_down(&t->thread_timer_semaphore);
+  // while (timer_elapsed (start) < ticks) 
+  //   //this is the busy waiting
+  //   thread_yield ();
 
 }
 
@@ -181,11 +185,11 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   struct thread *t = thread_current ();
 
-  if(timer_ticks()>=t->time_asleep){
-    t->time_asleep = 0;
-    printf("%s%d\n", "wake up!", t->tid);
-    sema_up(&t->thread_timer_semaphore);
-  }
+  // if(timer_ticks()>=t->time_asleep){
+  //   t->time_asleep = 0;
+  //   printf("%s%d\n", "wake up! thread ", t->tid);
+  //   // sema_up(&t->thread_timer_semaphore);
+  // }
 
   ticks++;
   thread_tick ();
