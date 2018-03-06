@@ -4,6 +4,11 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include "threads/synch.h"
+
+#include "tests/threads/tests.h"
+#include "threads/init.h"
+
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -100,7 +105,16 @@ struct thread
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
+
+    struct semaphore thread_timer_semaphore; //semaphore associated with the thread
+    int time_asleep; //amount of time that the thread stays asleep for
   };
+
+  // One element in the list
+struct mystruct {
+  char *word;
+  struct list_elem elem;
+};
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.

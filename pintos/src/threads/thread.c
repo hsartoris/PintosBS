@@ -115,6 +115,7 @@ thread_start (void)
 
   /* Wait for the idle thread to initialize idle_thread. */
   sema_down (&idle_started);
+  test_list();
 }
 
 /* Called by the timer interrupt handler at each timer tick.
@@ -137,6 +138,12 @@ thread_tick (void)
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
     intr_yield_on_return ();
+
+  //we put this there
+  if(timer_ticks()<=t->time_asleep){
+    t->time_asleep = 0;
+    sema_up(&t->thread_timer_semaphore);
+  }
 }
 
 /* Prints thread statistics. */
@@ -226,8 +233,8 @@ thread_block (void)
 
    This function does not preempt the running thread.  This can
    be important: if the caller had disabled interrupts itself,
-   it may expect that it can atomically unblock a thread and
-   update other data. */
+   it may expect that it can atomically unblock a thread an
+d   update other data. */
 void
 thread_unblock (struct thread *t) 
 {
@@ -464,9 +471,14 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
 
+
+  sema_init(&t->thread_timer_semaphore, 0);//initialize that bad  boy FROM: US
+
+
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
+
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -521,9 +533,9 @@ thread_schedule_tail (struct thread *prev)
 
   /* Mark us as running. */
   cur->status = THREAD_RUNNING;
-  if(strcmp(cur->name,"idle")!=0){
+  /*if(strcmp(cur->name,"idle")!=0){
   printf("%s%s\n", "Now running: ", cur->name);
-  }/* Start new time slice. */
+  }*//* Start new time slice. */
   thread_ticks = 0;
 
 #ifdef USERPROG
@@ -583,3 +595,43 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+/*
+  Build a list and test that it works.
+*/
+
+int test_list() {
+  struct list wordlist;
+  char *stuff[] = {"The","rain","in","Spain","falls",
+       "mainly","in","the","plain.",NULL};
+  int i;
+  struct list_elem *e;
+  
+  list_init(&wordlist);
+
+  if (list_empty(&wordlist)) printf("list is empty\n");
+  else printf("list has %d elements\n",list_size(&wordlist));
+
+  // Create linked list of mystructs.
+  for (i = 0; stuff[i] != NULL; i++) {
+    struct mystruct *s = (struct mystruct *) malloc(sizeof(struct mystruct));
+    s->word = stuff[i];
+    list_push_back (&wordlist, &s->elem); // onto end of list
+  }
+  if (list_empty(&wordlist)) printf("list is empty\n");
+  else printf("list has %d elements\n",list_size(&wordlist));
+
+  // Loop over list
+  for (e = list_begin(&wordlist);
+       e != list_end(&wordlist);
+       e = list_next(e) ) {
+    // TODO: Print out the items in the list.
+    // You need to find and read the list code to figure this out.
+    // You then also need to free the dynamically allocated memory!
+    struct mystruct *f = list_entry (e, struct mystruct, elem);
+    printf("%s\n", f->word);
+
+  }
+  
+  return (0);
+}
