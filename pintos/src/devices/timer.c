@@ -95,7 +95,7 @@ timer_sleep (int64_t ticks)
   int64_t start = timer_ticks ();
 
   t->time_asleep = (ticks+start);//also us
-
+  printf("%d\n", t->time_asleep);
   sema_down(&t->thread_timer_semaphore);
 
   ASSERT (intr_get_level () == INTR_ON);
@@ -179,6 +179,14 @@ timer_print_stats (void)
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
+  struct thread *t = thread_current ();
+
+  if(timer_ticks()>=t->time_asleep){
+    t->time_asleep = 0;
+    printf("%s%d\n", "wake up!", t->tid);
+    sema_up(&t->thread_timer_semaphore);
+  }
+
   ticks++;
   thread_tick ();
 }

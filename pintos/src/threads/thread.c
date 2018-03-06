@@ -125,6 +125,13 @@ thread_tick (void)
 {
   struct thread *t = thread_current ();
 
+if(timer_ticks()>=t->time_asleep){
+    t->time_asleep = 0;
+    printf("%s%d\n", "wake up!", t->tid);
+    sema_up(&t->thread_timer_semaphore);
+  }
+
+
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -140,10 +147,10 @@ thread_tick (void)
     intr_yield_on_return ();
 
   //we put this there
-  if(timer_ticks()<=t->time_asleep){
-    t->time_asleep = 0;
-    sema_up(&t->thread_timer_semaphore);
-  }
+  /*if(&t->thread_timer_semaphore!=NULL){
+    printf("%d\n", t->time_asleep);
+  }*/
+
 }
 
 /* Prints thread statistics. */
