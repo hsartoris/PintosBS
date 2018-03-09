@@ -1,0 +1,14 @@
+#!/bin/bash
+
+declare -a tests=("multiple" "negative" "priority" "simultaneous" "wait" "zero")
+
+if [ ! -d "build" ]; then
+	make
+fi
+
+rm build/tests/threads/alarm-*.result
+
+for t in "${tests[@]}"
+do
+	make build/tests/threads/alarm-$t.result
+done

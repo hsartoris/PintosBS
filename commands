@@ -8,3 +8,9 @@ target remote localhost:1234
 c
 
 
+---------testing---------
+in pintos/src/threads:
+make build/tests/alarm-<something>.result
+[cat|ls] build/tests/alarm-*.result 
+
+
