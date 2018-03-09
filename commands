@@ -1,0 +1,10 @@
+
+make clean && make
+
+pintos --gdb -- run alarm-multiple
+
+pintos-gdb kernel.o // within build directory
+target remote localhost:1234
+c
+
+
