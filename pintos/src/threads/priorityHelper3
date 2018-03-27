@@ -1,0 +1,2 @@
+#!/bin/bash
+bash priorityHelper2 | grep "PASS\|FAIL"
