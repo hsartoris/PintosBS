@@ -233,6 +233,7 @@ thread_create (const char *name, int priority,
 
 	/* Add to run queue. */
 	thread_unblock (t);
+	thread_yield();
 
 	return tid;
 }
@@ -274,8 +275,9 @@ thread_unblock (struct thread *t)
 	ASSERT (t->status == THREAD_BLOCKED);
 
 
-
-	list_push_back (&ready_list, &t->elem);
+	//TODO: convert to ordered list insert
+//	list_push_back (&ready_list, &t->elem);
+	list_insert_ordered(&ready_list, &t->elem, &thread_compare_priority, NULL);
 	t->status = THREAD_READY;
 	intr_set_level (old_level);
 }
@@ -347,7 +349,9 @@ thread_yield (void)
 
 	old_level = intr_disable ();
 	if (cur != idle_thread) 
-		list_push_back (&ready_list, &cur->elem);
+		//TODO: convert to ordered list insert
+		//list_push_back (&ready_list, &cur->elem);
+		list_insert_ordered (&ready_list, &cur->elem, &thread_compare_priority, NULL);
 	cur->status = THREAD_READY;
 	schedule ();
 	intr_set_level (old_level);
@@ -369,12 +373,24 @@ thread_foreach (thread_action_func *func, void *aux)
 		func (t, aux);
 	}
 }
-
+ 
 /* Sets the current thread's priority to NEW_PRIORITY. */
 	void
 thread_set_priority (int new_priority) 
 {
 	thread_current ()->priority = new_priority;
+	thread_yield();
+}
+
+/* Compares thread priorities */
+	bool
+thread_compare_priority (struct list_elem* e1, 
+		struct list_elem* e2, void* aux)
+{
+	struct thread* t1 = list_entry(e1, struct thread, elem);
+	struct thread* t2 = list_entry(e2, struct thread, elem);
+//	printf("Thread 1 priority: %d; thread 2 priority: %d\n", t1->priority, t2->priority);
+	return (t1->priority > t2->priority);
 }
 
 /* Returns the current thread's priority. */
@@ -540,10 +556,12 @@ next_thread_to_run (void)
 		return idle_thread;
 	else {
 		// find highest priority thread
-		int highest_priority = PRI_MAX + 1;
+		int highest_priority = PRI_MIN - 1;
 		struct list_elem *highest_priority_elem;
 		struct list_elem *e;
 		// Loop over list
+		// TODO: take advantage of ordered list
+		/*
 		for (e = list_begin(&ready_list);
 				e != list_end(&ready_list);
 				e = list_next(e) ){
@@ -552,7 +570,7 @@ next_thread_to_run (void)
 					elem);
 
 			// TODO: figure out priority donation on non-current thread
-			if(temp->priority < highest_priority ){
+			if(temp->priority > highest_priority ){
 				highest_priority_elem = e;
 				highest_priority = temp->priority;
 			}
@@ -560,7 +578,8 @@ next_thread_to_run (void)
 		struct thread *result = list_entry( highest_priority_elem,
 				struct thread, elem);
 		list_remove(highest_priority_elem);
-		return result;
+		*/
+		return list_entry(list_pop_front(&ready_list), struct thread, elem);
 	}
 }
 

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+declare -a tests=("change" "condvar" "donate-chain" "donate-lower" "donate-multiple2" "donate-multiple" "donate-nest" "donate-one" "donate-sema" "fifo" "preempt" "sema")
+
+if [ -z "$1" ]
+then
+	for t in "${tests[@]}"
+	do
+		cat build/tests/threads/priority-$t.result
+	done
+	exit
+fi
+
+if [ ! -d "build" ]; then
+	make
+fi
+
+rm build/tests/threads/priority-*.result
+
+for t in "${tests[@]}"
+do
+	make build/tests/threads/priority-$t.result
+done
