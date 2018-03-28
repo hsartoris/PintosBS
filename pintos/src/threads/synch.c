@@ -48,6 +48,8 @@ sema_init (struct semaphore *sema, unsigned value)
 
 	sema->value = value;
 	list_init (&sema->waiters);
+	sema->owner = NULL;
+	sema->donater = NULL;
 }
 
 /* Down or "P" operation on a semaphore.  Waits for SEMA's value
@@ -68,18 +70,19 @@ sema_down (struct semaphore *sema)
 	old_level = intr_disable ();
 	while (sema->value == 0) 
 	{
-		/* replace list_push_back with default sorted list */
-		//      list_push_back (&sema->waiters, &thread_current ()->elem);
-		list_insert_ordered(&sema->waiters, &thread_current()->elem, &thread_compare_priority, NULL);
-		struct list_elem *e;
-		struct list_elem elem;
-		//printf("new check\n");
-		for (e = list_begin(&sema->waiters);
-				e != list_end(&sema->waiters);
-				e = list_next(e)) {
-			struct thread* temp = list_entry(e, struct thread, elem);
-			//	  printf("%d\n", temp->priority);
+		if (sema->owner != NULL) {
+			if (sema->donater != NULL && 
+					get_thread_priority(thread_current()) >
+					get_thread_priority(sema->donater)) {
+				// new thread has higher priority than donater
+				list_remove(&sema->donater->priority_elem);
+				sema->donater = thread_current();
+				list_insert_ordered(&sema->owner->priorities_list,
+						&sema->donater->priority_elem, 
+						&thread_compare_priority, NULL);
+			}
 		}
+		list_insert_ordered(&sema->waiters, &thread_current()->elem, &thread_compare_priority, NULL);
 		thread_block ();
 	}
 	sema->value--;
@@ -124,9 +127,14 @@ sema_up (struct semaphore *sema)
 	ASSERT (sema != NULL);
 
 	old_level = intr_disable ();
+	if (sema->owner != NULL && sema->donater != NULL) {
+		list_remove(&sema->donater->priority_elem);
+		sema->donater = NULL;
+	}
 	if (!list_empty (&sema->waiters)) {
-		thread_unblock (list_entry (list_pop_front (&sema->waiters),
-					struct thread, elem));
+		sema->owner = list_entry (list_pop_front (&sema->waiters),
+					struct thread, elem);
+		thread_unblock(sema->owner);
 	}
 	sema->value++;
 	intr_set_level (old_level);

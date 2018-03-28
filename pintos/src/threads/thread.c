@@ -215,6 +215,7 @@ thread_create (const char *name, int priority,
 	/* Initialize thread. */
 	init_thread (t, name, priority);
 	tid = t->tid = allocate_tid ();
+	list_init(&t->priorities_list);
 
 	/* Stack frame for kernel_thread(). */
 	kf = alloc_frame (t, sizeof *kf);
@@ -390,7 +391,20 @@ thread_compare_priority (struct list_elem* e1,
 	struct thread* t1 = list_entry(e1, struct thread, elem);
 	struct thread* t2 = list_entry(e2, struct thread, elem);
 //	printf("Thread 1 priority: %d; thread 2 priority: %d\n", t1->priority, t2->priority);
-	return (t1->priority > t2->priority);
+	return (get_thread_priority(t1) > 
+			get_thread_priority(t2));
+}
+
+/* Gets priority of thread, including donation */
+	int
+get_thread_priority (struct thread* t)
+{
+	if (!list_empty(&t->priorities_list)) {
+		struct thread* temp = list_entry(list_head(&t->priorities_list),
+				struct thread, priority_elem);
+		return get_thread_priority(temp);
+	}
+	return t->priority;
 }
 
 /* Returns the current thread's priority. */
@@ -398,7 +412,7 @@ thread_compare_priority (struct list_elem* e1,
 thread_get_priority (void) 
 {
 	// TODO: implement priority donation
-	return thread_current ()->priority;
+	return get_thread_priority(thread_current());
 }
 
 /* Sets the current thread's nice value to NICE. */
