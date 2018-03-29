@@ -402,7 +402,9 @@ get_thread_priority (struct thread* t)
 	if (!list_empty(&t->priorities_list)) {
 		struct thread* temp = list_entry(list_head(&t->priorities_list),
 				struct thread, priority_elem);
-		return get_thread_priority(temp);
+		printf("priority, %d, has been donated to this thread, %d\n", temp->priority, t->tid);
+		//return get_thread_priority(temp);
+		return temp->priority;
 	}
 	return t->priority;
 }
@@ -412,7 +414,8 @@ get_thread_priority (struct thread* t)
 thread_get_priority (void) 
 {
 	// TODO: implement priority donation
-	return get_thread_priority(thread_current());
+	
+	return thread_current()->priority;
 }
 
 /* Sets the current thread's nice value to NICE. */
