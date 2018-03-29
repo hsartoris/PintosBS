@@ -70,23 +70,22 @@ sema_down (struct semaphore *sema)
 	old_level = intr_disable ();
 	while (sema->value == 0) 
 	{
-		
 		if (sema->owner != NULL) {
 			if (sema->donater != NULL && 
 					get_thread_priority(thread_current()) >
 					get_thread_priority(sema->donater)) {
 				// new thread has higher priority than donater
 				list_remove(&sema->donater->priority_elem);
-				sema->donater = thread_current();
-				list_insert_ordered(&sema->owner->priorities_list,
-						&sema->donater->priority_elem, 
-						&thread_compare_priority, NULL);
 			}
+			sema->donater = thread_current();
+			list_insert_ordered(&sema->owner->priorities_list,
+					&sema->donater->priority_elem, 
+					&thread_compare_priority, NULL);
 		}
-
 		list_insert_ordered(&sema->waiters, &thread_current()->elem, &thread_compare_priority, NULL);
 		thread_block ();
 	}
+	sema->owner = thread_current();
 	sema->value--;
 	intr_set_level (old_level);
 }

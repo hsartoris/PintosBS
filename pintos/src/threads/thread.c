@@ -215,7 +215,6 @@ thread_create (const char *name, int priority,
 	/* Initialize thread. */
 	init_thread (t, name, priority);
 	tid = t->tid = allocate_tid ();
-	list_init(&t->priorities_list);
 
 	/* Stack frame for kernel_thread(). */
 	kf = alloc_frame (t, sizeof *kf);
@@ -402,7 +401,6 @@ get_thread_priority (struct thread* t)
 	if (!list_empty(&t->priorities_list)) {
 		struct thread* temp = list_entry(list_head(&t->priorities_list),
 				struct thread, priority_elem);
-		printf("priority, %d, has been donated to this thread, %d\n", temp->priority, t->tid);
 		//return get_thread_priority(temp);
 		return temp->priority;
 	}
@@ -415,7 +413,7 @@ thread_get_priority (void)
 {
 	// TODO: implement priority donation
 	
-	return thread_current()->priority;
+	return get_thread_priority(thread_current());
 }
 
 /* Sets the current thread's nice value to NICE. */
@@ -516,6 +514,7 @@ running_thread (void)
 	static bool
 is_thread (struct thread *t)
 {
+	if (t == NULL) printf("we are fucked");
 	return t != NULL && t->magic == THREAD_MAGIC;
 }
 
@@ -536,7 +535,7 @@ init_thread (struct thread *t, const char *name, int priority)
 	t->stack = (uint8_t *) t + PGSIZE;
 	t->priority = priority;
 	t->magic = THREAD_MAGIC;
-
+	list_init(&t->priorities_list);
 
 	sema_init(&t->thread_timer_semaphore, 0);//initialize that bad  boy FROM: US
 
