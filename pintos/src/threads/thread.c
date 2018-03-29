@@ -399,10 +399,10 @@ thread_compare_priority (struct list_elem* e1,
 get_thread_priority (struct thread* t)
 {
 	if (!list_empty(&t->priorities_list)) {
-		struct thread* temp = list_entry(list_head(&t->priorities_list),
+		struct thread* temp = 
+			list_entry(list_next(list_head(&t->priorities_list)),
 				struct thread, priority_elem);
-		//return get_thread_priority(temp);
-		return temp->priority;
+		return get_thread_priority(temp);
 	}
 	return t->priority;
 }

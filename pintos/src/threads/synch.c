@@ -71,16 +71,31 @@ sema_down (struct semaphore *sema)
 	while (sema->value == 0) 
 	{
 		if (sema->owner != NULL) {
-			if (sema->donater != NULL && 
+			if (sema->donater != NULL &&
 					get_thread_priority(thread_current()) >
 					get_thread_priority(sema->donater)) {
 				// new thread has higher priority than donater
 				list_remove(&sema->donater->priority_elem);
+				sema->donater = thread_current();
+				list_insert_ordered(&sema->owner->priorities_list,
+						&sema->donater->priority_elem, 
+						&thread_compare_priority, NULL);
+			} else if (sema->donater == NULL &&
+					get_thread_priority(thread_current()) >
+					get_thread_priority(sema->owner)) {
+				// no donater but new thread is higher than
+				// owner
+				sema->donater = thread_current();
+				list_insert_ordered(&sema->owner->priorities_list,
+						&sema->donater->priority_elem, 
+						&thread_compare_priority, NULL);
+				// EXTREME DEBUGGING CODE DO NOT LEAVE IN \/
+				//struct thread* test = list_entry(list_next(list_head(&sema->owner->priorities_list)),
+			//			struct thread, priority_elem);
+			//	printf("donation from thread with priority %d\n",
+			//			get_thread_priority(test));
 			}
-			sema->donater = thread_current();
-			list_insert_ordered(&sema->owner->priorities_list,
-					&sema->donater->priority_elem, 
-					&thread_compare_priority, NULL);
+
 		}
 		list_insert_ordered(&sema->waiters, &thread_current()->elem, &thread_compare_priority, NULL);
 		thread_block ();
