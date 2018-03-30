@@ -89,15 +89,13 @@ sema_down (struct semaphore *sema)
 				list_insert_ordered(&sema->owner->priorities_list,
 						&sema->donater->priority_elem, 
 						&thread_compare_priority, NULL);
-				// EXTREME DEBUGGING CODE DO NOT LEAVE IN \/
-				//struct thread* test = list_entry(list_next(list_head(&sema->owner->priorities_list)),
-			//			struct thread, priority_elem);
-			//	printf("donation from thread with priority %d\n",
-			//			get_thread_priority(test));
+				//struct thread* test = list_entry(list_next(list_head(&sema->owner->priorities_list)), struct thread, priority_elem);
+				//printf(test->name);
 			}
-
 		}
-		list_insert_ordered(&sema->waiters, &thread_current()->elem, &thread_compare_priority, NULL);
+		list_insert_ordered(&sema->waiters, 
+				&thread_current()->elem, 
+				&thread_compare_priority, NULL);
 		thread_block ();
 	}
 	sema->owner = thread_current();
@@ -148,6 +146,7 @@ sema_up (struct semaphore *sema)
 		sema->donater = NULL;
 	}
 	if (!list_empty (&sema->waiters)) {
+		list_sort(&sema->waiters, &thread_compare_priority, NULL);
 		sema->owner = list_entry (list_pop_front (&sema->waiters),
 					struct thread, elem);
 		thread_unblock(sema->owner);

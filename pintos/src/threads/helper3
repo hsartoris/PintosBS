@@ -1,0 +1,2 @@
+#!/bin/bash
+bash helper2 | grep "PASS\|FAIL"

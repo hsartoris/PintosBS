@@ -10,5 +10,5 @@ rm build/tests/threads/alarm-*.result
 
 for t in "${tests[@]}"
 do
-	make build/tests/threads/alarm-$t.result
+	cat build/tests/threads/alarm-$t.result
 done
